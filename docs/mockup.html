@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>R1 Screen vs CodexBar — Tabbed by machine</title>
+<style>
+  :root {
+    --ink:#0a0a0c; --muted:#6b6b76; --line:rgba(0,0,0,.12); --surface:#f4f4f6;
+    --codex:#4a9eff;      /* Codex blue */
+    --claude:#d97757;     /* Anthropic orange */
+    --r1:#FE5000;         /* rabbit orange (active tab) */
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:28px; background:#fff; color:var(--ink);
+         font-family:-apple-system,system-ui,"Segoe UI",sans-serif; }
+  h1 { font-size:22px; font-weight:500; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:13px; margin:0 0 22px; }
+  .row { display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start; }
+  .panel { background:var(--surface); border-radius:16px; padding:14px; }
+  .cap { font-size:12px; font-weight:500; color:var(--muted); letter-spacing:.3px; margin-bottom:10px; }
+
+  /* ---- CodexBar source tiles ---- */
+  .cbcol { flex:1; min-width:300px; }
+  .tile { background:#1d6dfd; color:#fff; border-radius:12px; padding:14px 16px; margin-bottom:12px; }
+  .tile:last-child { margin-bottom:0; }
+  .tile .h { display:flex; justify-content:space-between; align-items:baseline; }
+  .tile .h b { font-size:18px; font-weight:500; }
+  .tile .h span { font-size:12px; }
+  .upd { font-size:11px; opacity:.8; border-bottom:1px solid rgba(255,255,255,.25); padding-bottom:8px; margin-bottom:8px; }
+  .lab { font-size:14px; font-weight:500; margin-top:8px; }
+  .track { height:7px; background:rgba(255,255,255,.28); border-radius:4px; margin:4px 0; }
+  .track > i { display:block; height:100%; border-radius:4px; background:#fff; }
+  .kv { display:flex; justify-content:space-between; font-size:11px; }
+  .accts { font-size:11px; color:var(--muted); margin-top:10px; line-height:1.5; }
+
+  /* ---- R1 device, tabbed ---- */
+  .frame { background:#111; border-radius:22px; padding:14px; }
+  .screen { width:240px; height:282px; background:#0a0a0c; color:#e9e9ee; border-radius:8px;
+            padding:8px 10px; font-size:11px; display:flex; flex-direction:column; }
+  .sh { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+  .sh b { font-size:13px; font-weight:500; color:var(--r1); }
+  .sh span { font-size:9px; color:#8a8a96; }
+
+  .tabs { display:flex; gap:6px; margin-bottom:8px; }
+  .tab { flex:1; text-align:center; font-size:11px; font-weight:500; padding:5px 0; border-radius:6px;
+         background:#16161c; color:#8a8a96; border:1px solid #23232b; cursor:pointer; user-select:none; }
+  .tab.active { background:var(--r1); color:#fff; border-color:var(--r1); }
+
+  .prov { margin-bottom:9px; }
+  .prov .name { font-size:12px; font-weight:500; }
+  .prov .name.codex { color:var(--codex); }
+  .prov .name.claude { color:var(--claude); }
+  .prov .acct { font-size:8.5px; color:#8a8a96; }
+  .mrow { display:flex; justify-content:space-between; font-size:9px; color:#9a9aa2; margin-top:3px; }
+  .mtrack { height:6px; background:#23232b; border-radius:3px; margin:2px 0; }
+  .mtrack > i { display:block; height:100%; border-radius:3px; }
+  .green { background:#16d3b4; } .amber { background:#f5b32a; } .red { background:#ff4d4d; }
+  .foot { margin-top:auto; font-size:9px; color:#8a8a96; border-top:1px solid #23232b; padding-top:5px;
+          display:flex; justify-content:space-between; }
+  .foot b { color:#e9e9ee; font-weight:500; }
+  .tabpane { display:none; flex-direction:column; flex:1; }
+  .tabpane.active { display:flex; }
+
+  .note { background:#fff; border:.5px solid var(--line); border-radius:14px; padding:14px 16px;
+          font-size:13px; line-height:1.6; margin-top:18px; max-width:780px; }
+  .note b { font-weight:500; }
+  .chip { display:inline-block; padding:1px 7px; border-radius:10px; font-size:11px; font-weight:500; }
+  .chip.codex { background:rgba(74,158,255,.16); color:#1f6fd0; }
+  .chip.claude { background:rgba(217,119,87,.18); color:#b4542f; }
+  .sample { font-size:10px; color:#9a9aa2; margin-top:8px; text-align:center; }
+</style>
+</head>
+<body>
+  <h1>R1 screen vs. your CodexBar — tabbed by machine</h1>
+  <p class="sub">Planning artifact · one tab per machine (M4 / M1), each with Codex + Claude · 2026-06-09 · tabs are clickable</p>
+
+  <div class="row">
+    <!-- SOURCE -->
+    <div class="panel cbcol">
+      <div class="cap">YOUR CODEXBAR · macOS menu bar (source — M4 account shown)</div>
+      <div class="tile">
+        <div class="h"><b>Claude</b><span>Max</span></div>
+        <div class="upd">Updated just now</div>
+        <div class="lab">Session</div><div class="track"><i style="width:93%"></i></div>
+        <div class="kv"><span>93% left</span><span>Resets in 2h 40m</span></div>
+        <div class="lab">Weekly</div><div class="track"><i style="width:49%"></i></div>
+        <div class="kv"><span>49% left</span><span>Resets in 4d 8h</span></div>
+      </div>
+      <div class="tile">
+        <div class="h"><b>Codex</b><span>lg@sunified.com · Team</span></div>
+        <div class="upd">Updated 4m ago</div>
+        <div class="lab">Session</div><div class="track"><i style="width:99%"></i></div>
+        <div class="kv"><span>99% left</span><span>Resets in 4h 56m</span></div>
+        <div class="lab">Weekly</div><div class="track"><i style="width:2%; background:#ffd1d1;"></i></div>
+        <div class="kv"><span>0% left</span><span>Resets in 1d 22h</span></div>
+      </div>
+      <div class="accts">Tabs map to machines, each with its own accounts:
+        <br><b style="color:var(--ink);">M4</b> Codex Team · Claude Max &nbsp;|&nbsp; <b style="color:var(--ink);">M1</b> Codex Plus · Claude Pro <span style="color:#9a9aa2;">(M1 = sample)</span></div>
+    </div>
+
+    <!-- R1 TABBED -->
+    <div class="panel" style="display:flex; flex-direction:column; align-items:center;">
+      <div class="cap" style="align-self:flex-start;">R1 CREATION · 240×282 @ 1:1 · tabbed by machine</div>
+      <div class="frame">
+        <div class="screen">
+          <div class="sh"><b>CodexBar</b><span id="clk">12:41 ↻</span></div>
+          <div class="tabs">
+            <div class="tab active" data-t="m4" onclick="seltab('m4')">M4</div>
+            <div class="tab" data-t="m1" onclick="seltab('m1')">M1</div>
+          </div>
+
+          <!-- M4 tab -->
+          <div id="m4" class="tabpane active">
+            <div class="prov">
+              <div class="name codex">Codex <span class="acct">· Team</span></div>
+              <div class="mrow"><span>Session</span><span>99% · 4h56</span></div>
+              <div class="mtrack"><i class="green" style="width:99%"></i></div>
+              <div class="mrow"><span>Weekly</span><span>0% · 1d22</span></div>
+              <div class="mtrack"><i class="red" style="width:3%"></i></div>
+            </div>
+            <div class="prov">
+              <div class="name claude">Claude <span class="acct">· Max</span></div>
+              <div class="mrow"><span>Session</span><span>93% · 2h40</span></div>
+              <div class="mtrack"><i class="green" style="width:93%"></i></div>
+              <div class="mrow"><span>Weekly</span><span>49% · 4d8h</span></div>
+              <div class="mtrack"><i class="amber" style="width:49%"></i></div>
+              <div class="mrow"><span>Sonnet</span><span>6%</span></div>
+              <div class="mtrack" style="height:5px;"><i class="red" style="width:6%"></i></div>
+            </div>
+            <div class="foot"><span><b>M4</b> burn today</span><span>$6.62 · 5.6M</span></div>
+          </div>
+
+          <!-- M1 tab -->
+          <div id="m1" class="tabpane">
+            <div class="prov">
+              <div class="name codex">Codex <span class="acct">· Plus</span></div>
+              <div class="mrow"><span>Session</span><span>72% · 3h10</span></div>
+              <div class="mtrack"><i class="green" style="width:72%"></i></div>
+              <div class="mrow"><span>Weekly</span><span>35% · 5d</span></div>
+              <div class="mtrack"><i class="amber" style="width:35%"></i></div>
+            </div>
+            <div class="prov">
+              <div class="name claude">Claude <span class="acct">· Pro</span></div>
+              <div class="mrow"><span>Session</span><span>60% · 1h05</span></div>
+              <div class="mtrack"><i class="amber" style="width:60%"></i></div>
+              <div class="mrow"><span>Weekly</span><span>12% · 3d</span></div>
+              <div class="mtrack"><i class="red" style="width:12%"></i></div>
+            </div>
+            <div class="foot"><span><b>M1</b> burn today</span><span>$1.10 · 0.9M</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="sample">M1 tab = sample numbers · scroll wheel / side-button cycles tabs on-device</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Tabbed layout.</b> One pane per machine — <span class="chip" style="background:#eee;color:#333;">M4</span> /
+    <span class="chip" style="background:#eee;color:#333;">M1</span> — each showing that machine's
+    <span class="chip codex">Codex</span> and <span class="chip claude">Claude</span> with full Session + Weekly bars (more room than the 2×2, so Sonnet + a burn footer fit too).
+    Labels color-coded <b style="color:#1f6fd0;">Codex blue</b> / <b style="color:#b4542f;">Anthropic orange</b>; active tab in rabbit orange.
+    On-device, the R1 scroll wheel or side button switches tabs (here: click them).
+  </div>
+
+<script>
+  function seltab(id){
+    document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('active', p.id===id));
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.t===id));
+  }
+</script>
+</body>
+</html>

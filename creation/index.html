@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=240, height=282, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>CodexBar R1</title>
+<style>
+  :root{
+    --bg:#0a0a0c; --fg:#e9e9ee; --dim:#8a8a96; --track:#23232b; --line:#23232b;
+    --codex:#4a9eff; --claude:#d97757; --r1:#FE5000;
+    --green:#16d3b4; --amber:#f5b32a; --red:#ff4d4d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:240px;height:282px;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,system-ui,sans-serif;overflow:hidden;}
+  #app{padding:8px 10px;height:100%;display:flex;flex-direction:column;}
+  .sh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .sh b{font-size:13px;font-weight:600;color:var(--r1);}
+  .sh span{font-size:9px;color:var(--dim);}
+  .tabs{display:flex;gap:6px;margin-bottom:8px;}
+  .tab{flex:1;text-align:center;font-size:11px;font-weight:600;padding:5px 0;border-radius:6px;
+    background:#16161c;color:var(--dim);border:1px solid var(--line);}
+  .tab.active{background:var(--r1);color:#fff;border-color:var(--r1);}
+  .pane{display:none;flex-direction:column;flex:1;}
+  .pane.active{display:flex;}
+  .prov{margin-bottom:9px;}
+  .prov .name{font-size:12px;font-weight:600;}
+  .prov .name.codex{color:var(--codex);} .prov .name.claude{color:var(--claude);}
+  .prov .acct{font-size:8.5px;color:var(--dim);font-weight:400;}
+  .mrow{display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-top:3px;}
+  .bar{height:6px;background:var(--track);border-radius:3px;margin:2px 0;}
+  .bar>i{display:block;height:100%;border-radius:3px;}
+  .foot{margin-top:auto;font-size:9px;color:var(--dim);border-top:1px solid var(--line);padding-top:5px;
+    display:flex;justify-content:space-between;}
+  .foot b{color:var(--fg);font-weight:600;}
+  .err{font-size:10px;color:var(--red);padding:6px 0;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="sh"><b>CodexBar</b><span id="clk">—</span></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="panes" style="flex:1;display:flex;flex-direction:column;"></div>
+</div>
+<script>
+// The only secret arrives in the URL the install QR encoded (?k=TOKEN).
+const TOKEN = new URLSearchParams(location.search).get("k") || "";
+const REFRESH_MS = 60000;
+let active = null;
+
+const pctClamp = v => Math.max(0, Math.min(100, Math.round(v ?? 0)));
+const barColor = left => left > 40 ? "var(--green)" : left > 15 ? "var(--amber)" : "var(--red)";
+
+function countdown(iso){
+  if(!iso) return "";
+  const ms = new Date(iso) - new Date();
+  if(ms <= 0) return "now";
+  const m = Math.floor(ms/60000), h = Math.floor(m/60), d = Math.floor(h/24);
+  if(d >= 1) return `${d}d${h%24}h`;
+  if(h >= 1) return `${h}h${String(m%60).padStart(2,"0")}`;
+  return `${m}m`;
+}
+
+function meter(label, win){
+  if(!win || win.usedPercent == null) return "";
+  const left = pctClamp(100 - win.usedPercent);
+  return `<div class="mrow"><span>${label}</span><span>${left}% · ${countdown(win.resetsAt)}</span></div>
+    <div class="bar"><i style="width:${left}%;background:${barColor(left)}"></i></div>`;
+}
+
+function provBlock(p){
+  const kind = /claude/i.test(p.provider) ? "claude" : "codex";
+  const u = p.usage || {};
+  const acct = (p.identity && (p.identity.loginMethod || p.identity.accountEmail)) ||
+               (u.identity && u.identity.loginMethod) || "";
+  return `<div class="prov">
+    <div class="name ${kind}">${p.provider || "?"} <span class="acct">${acct ? "· "+acct : ""}</span></div>
+    ${meter("Session", u.primary)}
+    ${meter("Weekly", u.secondary)}
+    ${u.tertiary ? meter(u.tertiary.label || "Extra", u.tertiary) : ""}
+  </div>`;
+}
+
+function machineList(payload){
+  // codexbar `both` may return an array or {providers:[...]} or a single object
+  if(Array.isArray(payload)) return payload;
+  if(payload && Array.isArray(payload.providers)) return payload.providers;
+  return payload ? [payload] : [];
+}
+
+function render(data){
+  const machines = data.machines || {};
+  const names = Object.keys(machines);
+  if(!active || !names.includes(active)) active = names[0] || null;
+
+  document.getElementById("tabs").innerHTML = names.map(n =>
+    `<div class="tab ${n===active?"active":""}" onclick="seltab('${n}')">${n}</div>`).join("");
+
+  document.getElementById("panes").innerHTML = names.map(n => {
+    const provs = machineList(machines[n]).map(provBlock).join("") ||
+      `<div class="err">${(data.errors||{})[n] || "no data"}</div>`;
+    return `<div class="pane ${n===active?"active":""}" id="pane-${n}">${provs}
+      <div class="foot"><span><b>${n}</b></span><span>updated ${new Date(data.generatedAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span></div>
+    </div>`;
+  }).join("");
+}
+
+function seltab(n){
+  active = n;
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("active", p.id === "pane-"+n));
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.textContent === n));
+}
+
+async function load(){
+  try{
+    const r = await fetch(`/usage?provider=both&k=${encodeURIComponent(TOKEN)}`,
+                          { headers: { Authorization: "Bearer " + TOKEN } });
+    if(r.status === 401){ document.getElementById("panes").innerHTML =
+      `<div class="err">Unauthorized — re-scan the install QR.</div>`; return; }
+    render(await r.json());
+    document.getElementById("clk").textContent =
+      new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) + " ↻";
+  }catch(e){
+    document.getElementById("panes").innerHTML =
+      `<div class="err">No data. Shim + codexbar serve running?<br><small>${e}</small></div>`;
+  }
+}
+load();
+setInterval(load, REFRESH_MS);
+// R1 hardware: side button cycles machine tabs; long-press forces refresh.
+window.addEventListener("sideClick", () => {
+  const names = [...document.querySelectorAll(".tab")].map(t => t.textContent);
+  if(names.length) seltab(names[(names.indexOf(active)+1) % names.length]);
+});
+window.addEventListener("longPressStart", load);
+</script>
+</body>
+</html>

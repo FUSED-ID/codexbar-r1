@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Keep the shim running on 127.0.0.1:8088 (HUB machine only).
+     Edit REPO_PATH and the env values, then:
+       cp to ~/Library/LaunchAgents/ && launchctl load -w ~/Library/LaunchAgents/com.fused.codexbar-shim.plist -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.fused.codexbar-shim</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/python3</string>
+    <string>REPO_PATH/shim/codexbar_shim.py</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>CODEXBAR_SHIM_TOKEN</key><string>REPLACE_WITH_TOKEN</string>
+    <key>CODEXBAR_UPSTREAMS</key><string>{"M4":"http://127.0.0.1:8080","M1":"http://m1:8080"}</string>
+    <key>CODEXBAR_PROVIDER</key><string>both</string>
+    <key>CODEXBAR_SHIM_HOST</key><string>127.0.0.1</string>
+    <key>CODEXBAR_SHIM_PORT</key><string>8088</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/tmp/codexbar-shim.log</string>
+  <key>StandardErrorPath</key><string>/tmp/codexbar-shim.err</string>
+</dict>
+</plist>

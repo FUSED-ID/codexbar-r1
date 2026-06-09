@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Install CodexBar on R1</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  body{font-family:-apple-system,system-ui,sans-serif;background:#0a0a0c;color:#e9e9ee;
+    display:flex;flex-direction:column;align-items:center;gap:14px;padding:32px;}
+  h1{color:#FE5000;font-size:20px;}
+  #qr{background:#fff;padding:16px;border-radius:12px;}
+  .field{width:min(520px,90vw);}
+  label{font-size:12px;color:#8a8a96;display:block;margin-bottom:4px;}
+  input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #23232b;background:#141418;color:#e9e9ee;font-size:13px;}
+  .url{font-size:11px;color:#16d3b4;word-break:break-all;max-width:520px;text-align:center;}
+  ol{max-width:520px;font-size:13px;line-height:1.5;color:#c7c7d1;}
+  button{background:#FE5000;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;}
+</style>
+</head>
+<body>
+  <h1>Install CodexBar → R1</h1>
+  <div class="field"><label>Funnel base URL (https://&lt;hub&gt;.&lt;tailnet&gt;.ts.net)</label>
+    <input id="base" placeholder="https://m4.tailnet-name.ts.net" /></div>
+  <div class="field"><label>Shim token (CODEXBAR_SHIM_TOKEN)</label>
+    <input id="tok" placeholder="paste the token you generated" /></div>
+  <button onclick="gen()">Generate QR</button>
+  <div id="qr"></div>
+  <div class="url" id="url"></div>
+  <ol>
+    <li>Confirm <code>codexbar serve</code> + the shim are running and Tailscale Funnel is live on the hub.</li>
+    <li>Enter the Funnel URL and token, hit <b>Generate QR</b>.</li>
+    <li>On the R1, open the creation install flow and scan this QR.</li>
+    <li>The R1 loads the Creation and polls <code>/usage</code> same-origin.</li>
+  </ol>
+<script>
+  function gen(){
+    const base = document.getElementById("base").value.replace(/\/+$/,"");
+    const tok = document.getElementById("tok").value.trim();
+    if(!base || !tok){ alert("Enter both the Funnel URL and the token."); return; }
+    const full = `${base}/?k=${encodeURIComponent(tok)}`;
+    const box = document.getElementById("qr"); box.innerHTML = "";
+    new QRCode(box, { text: full, width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M });
+    document.getElementById("url").textContent = full;
+  }
+</script>
+</body>
+</html>

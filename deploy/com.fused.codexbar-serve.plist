@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Keep `codexbar serve` running on 127.0.0.1:8080.
+     Install: cp to ~/Library/LaunchAgents/ then `launchctl load -w`.
+     Adjust the codexbar path if `which codexbar` differs. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.fused.codexbar-serve</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/codexbar</string>
+    <string>serve</string>
+    <string>--port</string><string>8080</string>
+    <string>--refresh-interval</string><string>60</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/tmp/codexbar-serve.log</string>
+  <key>StandardErrorPath</key><string>/tmp/codexbar-serve.err</string>
+</dict>
+</plist>
