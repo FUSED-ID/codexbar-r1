@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>R1 Creation Harness — virtual test rig</title>
+<style>
+  body{font-family:-apple-system,system-ui,sans-serif;background:#0d0d10;color:#e9e9ee;
+    margin:0;padding:24px;display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;}
+  h1{font-size:18px;font-weight:500;width:100%;margin:0 0 4px;}
+  .sub{width:100%;color:#8a8a96;font-size:13px;margin:-2px 0 14px;}
+  .device{display:flex;flex-direction:column;align-items:center;gap:12px;}
+  .frame{background:#111;border-radius:24px;padding:16px;box-shadow:0 8px 40px rgba(0,0,0,.5);}
+  /* EXACT R1 screen */
+  iframe{width:240px;height:282px;border:0;border-radius:8px;background:#000;display:block;}
+  .wheel{width:6px;height:70px;background:#2a2a31;border-radius:3px;align-self:flex-end;margin:-200px -8px 0 0;}
+  .pad{background:#16161c;border:1px solid #23232b;border-radius:12px;padding:14px;width:300px;}
+  .pad h2{font-size:13px;margin:0 0 10px;color:#c7c7d1;font-weight:500;}
+  label{font-size:11px;color:#8a8a96;display:block;margin:10px 0 4px;}
+  input{width:100%;padding:7px 9px;border-radius:7px;border:1px solid #23232b;background:#0d0d10;color:#e9e9ee;font-size:12px;}
+  .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+  button{background:#1b1b22;color:#e9e9ee;border:1px solid #2c2c36;border-radius:8px;padding:9px;font-size:12px;cursor:pointer;}
+  button:hover{background:#23232b;} button.r1{background:#FE5000;border-color:#FE5000;color:#fff;}
+  .log{margin-top:12px;background:#0d0d10;border:1px solid #23232b;border-radius:8px;padding:8px;height:120px;overflow:auto;font:11px/1.5 ui-monospace,monospace;color:#9a9aa2;}
+  .hint{font-size:11px;color:#8a8a96;margin-top:10px;line-height:1.5;}
+  code{color:#16d3b4;}
+</style>
+</head>
+<body>
+  <h1>R1 Creation Harness</h1>
+  <div class="sub">240×282 viewport + emulated native bridges + hardware buttons. No device needed.</div>
+
+  <div class="device">
+    <div class="frame"><iframe id="r1" title="R1 screen"></iframe></div>
+    <div class="wheel" title="scroll wheel"></div>
+    <div style="font-size:11px;color:#8a8a96;">R1 screen · 240×282 @ 1:1</div>
+  </div>
+
+  <div class="pad">
+    <h2>Controls</h2>
+    <label>Creation URL (local shim, or ../creation/index.html for static)</label>
+    <input id="url" value="http://127.0.0.1:8088/?k=YOUR_TOKEN" />
+    <div class="btns">
+      <button onclick="loadUrl()">Load ▸</button>
+      <button onclick="reload()">Reload</button>
+    </div>
+
+    <h2 style="margin-top:16px;">Hardware</h2>
+    <div class="btns">
+      <button class="r1" onclick="fire('sideClick')">Side button</button>
+      <button onclick="fire('longPressStart'); setTimeout(()=>fire('longPressEnd'),400)">Long-press</button>
+      <button onclick="fire('scrollUp')">Scroll ▲</button>
+      <button onclick="fire('scrollDown')">Scroll ▼</button>
+    </div>
+
+    <div class="log" id="log"></div>
+    <div class="hint">
+      Bridges stubbed: <code>PluginMessageHandler</code>, <code>FlutterButtonHandler</code>,
+      <code>CreationStorageHandler</code> (→ localStorage), <code>closeWebView</code>.
+      Outgoing <code>postMessage</code> calls are logged left. Data comes from your local shim
+      (<code>python shim/codexbar_shim.py</code>) — start it first, or point at the static mockup.
+    </div>
+  </div>
+
+<script>
+  const log = (m) => { const el = document.getElementById("log");
+    el.innerHTML += m + "<br>"; el.scrollTop = el.scrollHeight; };
+
+  function injectBridges(win){
+    const mk = (name) => ({ postMessage: (msg) => log(`${name} → ${msg}`) });
+    try{
+      win.PluginMessageHandler  = mk("PluginMessageHandler");
+      win.FlutterButtonHandler  = mk("FlutterButtonHandler");
+      win.CreationStorageHandler = {
+        postMessage: (m) => { log(`Storage → ${m}`);
+          try{ const o = JSON.parse(m); if(o.key) localStorage.setItem("r1_"+o.key, o.value ?? ""); }catch(e){} }
+      };
+      win.closeWebView = () => log("closeWebView()");
+      log("bridges injected");
+    }catch(e){ log("inject blocked (cross-origin): " + e.message); }
+  }
+
+  function fire(type){
+    const win = document.getElementById("r1").contentWindow;
+    try{ win.dispatchEvent(new CustomEvent(type)); log("⤷ " + type); }
+    catch(e){ log("dispatch blocked: " + e.message); }
+  }
+
+  function loadUrl(){ document.getElementById("r1").src = document.getElementById("url").value; }
+  function reload(){ const f = document.getElementById("r1"); f.src = f.src; }
+
+  document.getElementById("r1").addEventListener("load", function(){
+    try{ injectBridges(this.contentWindow); }
+    catch(e){ log("note: cross-origin iframe — bridges/events need same-origin (localhost shim)."); }
+  });
+  // default: static mockup so the rig shows something with zero setup
+  document.getElementById("r1").src = "../creation/index.html?k=demo";
+</script>
+</body>
+</html>
