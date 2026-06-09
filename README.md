@@ -43,9 +43,10 @@ vs the real CodexBar menu bar.
 
 ```
 shim/        FastAPI aggregating proxy + .env.example
-creation/    R1 Creation (index.html) + QR install page (install.html)
+creation/    R1 Creation (index.html) · r1-sdk.js (official-contract wrappers) · install.html (QR)
 deploy/      launchd plists for codexbar serve + the shim
-docs/        DEPLOY.md · TEST-PLAN.md · mockup.html
+dev/         r1-harness.html — browser rig emulating the R1 SDK channels
+docs/        DEPLOY.md · TEST-PLAN.md · SDK.md · VIRTUAL-TESTING.md · mockup.html
 ```
 
 ## Quick start
@@ -71,7 +72,10 @@ loop: **[docs/TEST-PLAN.md](docs/TEST-PLAN.md)**.
 ## R1 Creation constraints (handled)
 - Exactly **240×282 px**, **Canvas 2D / DOM only** (no WebGL).
 - HTTPS origin (Funnel) so there's no mixed-content.
-- Hardware bridges: **side button** cycles machine tabs, **long-press** forces refresh.
+- Built to rabbit's **official SDK contract** ([creation-triggers.md](https://github.com/rabbit-hmi-oss/creations-sdk)) via
+  [`creation/r1-sdk.js`](creation/r1-sdk.js): hardware events (`sideClick`/`scrollUp`/`scrollDown`/`longPress`)
+  cycle/refresh tabs, and the active tab persists through `creationStorage.plain`. See [docs/SDK.md](docs/SDK.md).
+- Test it with no device using [`dev/r1-harness.html`](dev/r1-harness.html), which emulates those channels.
 
 ## Security
 - Only the **token-gated shim** is public; `codexbar serve` stays loopback / tailnet.

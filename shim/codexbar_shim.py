@@ -131,6 +131,14 @@ async def cost(request: Request):
     return JSONResponse(await _aggregate("/cost", provider), headers=CORS)
 
 
+@app.get("/r1-sdk.js")
+async def sdk():
+    # Official-contract SDK wrappers. No secrets → ungated (same-dir for the Creation).
+    f = CREATION_DIR / "r1-sdk.js"
+    return FileResponse(f, media_type="application/javascript") if f.exists() \
+        else PlainTextResponse("r1-sdk.js missing", 404)
+
+
 @app.get("/")
 async def root(request: Request):
     if not _token_ok(request):

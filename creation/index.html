@@ -42,6 +42,8 @@
   <div class="tabs" id="tabs"></div>
   <div id="panes" style="flex:1;display:flex;flex-direction:column;"></div>
 </div>
+<!-- Official R1 Creations SDK wrappers (rabbit-hmi-oss/creations-sdk contract) -->
+<script src="r1-sdk.js"></script>
 <script>
 // The only secret arrives in the URL the install QR encoded (?k=TOKEN).
 const TOKEN = new URLSearchParams(location.search).get("k") || "";
@@ -109,6 +111,7 @@ function seltab(n){
   active = n;
   document.querySelectorAll(".pane").forEach(p => p.classList.toggle("active", p.id === "pane-"+n));
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.textContent === n));
+  if(window.R1) R1.storage.set("activeTab", n);   // official creationStorage.plain
 }
 
 async function load(){
@@ -125,14 +128,30 @@ async function load(){
       `<div class="err">No data. Shim + codexbar serve running?<br><small>${e}</small></div>`;
   }
 }
-load();
-setInterval(load, REFRESH_MS);
-// R1 hardware: side button cycles machine tabs; long-press forces refresh.
-window.addEventListener("sideClick", () => {
+// Restore last machine tab (official creationStorage.plain), then start.
+(async () => {
+  if(window.R1){ const saved = await R1.storage.get("activeTab"); if(saved) active = saved; }
+  await load();
+  setInterval(load, REFRESH_MS);
+})();
+
+// R1 hardware (official SDK contract): side button cycles machine tabs,
+// long-press forces a refresh, scroll wheel also cycles tabs.
+function cycle(dir){
   const names = [...document.querySelectorAll(".tab")].map(t => t.textContent);
-  if(names.length) seltab(names[(names.indexOf(active)+1) % names.length]);
-});
-window.addEventListener("longPressStart", load);
+  if(!names.length) return;
+  const i = (names.indexOf(active) + dir + names.length) % names.length;
+  seltab(names[i]);
+}
+if(window.R1){
+  R1.hardware.onSideClick(() => cycle(1));
+  R1.hardware.onScrollUp(() => cycle(-1));
+  R1.hardware.onScrollDown(() => cycle(1));
+  R1.hardware.onLongPressStart(load);
+} else {
+  window.addEventListener("sideClick", () => cycle(1));
+  window.addEventListener("longPressStart", load);
+}
 </script>
 </body>
 </html>
