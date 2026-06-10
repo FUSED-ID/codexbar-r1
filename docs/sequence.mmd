@@ -1,0 +1,58 @@
+flowchart TD
+  subgraph PREP["Phase 0 — Prep (both Macs)"]
+    A0[CodexBar signed in + CLI installed<br/>Tailscale up · note M1 tailnet name]
+  end
+
+  subgraph M1["Phase 1 — M1 peer (private)"]
+    B1[codexbar serve :8080]
+    B2[tailscale serve --tcp 8080<br/>reachable as http://m1:8080]
+    B1 --> B2
+  end
+
+  subgraph M4["Phase 2 — M4 hub"]
+    C1[codexbar serve :8080]
+    C2[shim :8088<br/>token + CORS + Host-rewrite<br/>aggregate M4 + M1]
+    C1 --> C2
+  end
+
+  subgraph PUB["Phase 3 — Publish"]
+    D1[tailscale funnel --https 443<br/>https://m4.tailnet.ts.net]
+  end
+
+  subgraph DRY["Phase 4 — Dry-run (no device)"]
+    E1[dev/r1-harness.html<br/>run T1–T10 + tab/refresh]
+  end
+
+  subgraph DEV["Phase 5 — Install on R1"]
+    F1[install.html → QR<br/>scan on R1]
+    F2[Creation loads<br/>tab per machine]
+    F1 --> F2
+  end
+
+  subgraph FB["Phase 6 — On-device feedback"]
+    G1[10-point pass<br/>record ✅/⚠️/❌ + Top 3]
+  end
+
+  subgraph NEXT["Phase 7–8 — Iterate / persist"]
+    H1[file Top-3 as issues → commits]
+    H2[launchd plists + caffeinate]
+  end
+
+  A0 --> B1
+  A0 --> C1
+  B2 -. tailnet .-> C2
+  C2 --> D1
+  D1 --> E1
+  E1 -->|green| F1
+  F2 --> G1
+  G1 --> H1
+  H1 --> H2
+
+  R1((Rabbit R1)) -. one fetch over Funnel .-> D1
+
+  classDef hub fill:#1d6dfd,stroke:#0a47b8,color:#fff;
+  classDef peer fill:#16161c,stroke:#3a3a44,color:#e9e9ee;
+  classDef dev fill:#FE5000,stroke:#b83900,color:#fff;
+  class C1,C2 hub;
+  class B1,B2 peer;
+  class F1,F2,E1 dev;
